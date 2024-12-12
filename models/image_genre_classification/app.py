@@ -5,12 +5,16 @@ from tensorflow.keras.preprocessing import image
 import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
+import pandas as pd
 
 app = Flask(__name__)
 
 
 MODEL_PATH = "model/image_genre_classifier_v3.keras"
 model = load_model(MODEL_PATH)
+
+recommendation_data = pd.read_json('./json/cleaned_osm_data_described.json')
+
 class_labels = ['adventure',
  'art',
  'beach',
@@ -84,12 +88,20 @@ def predict():
         # Process and predict
         top_predictions = preprocess_and_predict(img, model)
 
+        # Generate recommendations for the top predicted genres
+        recommendations = []
+
+        for genre, count in zip([top_predictions[0][0], top_predictions[1][0], top_predictions[2][0]], [4, 3, 3]):
+            genre_recommendations = recommendation_data[recommendation_data["genre"].str.lower() == genre.lower()]
+
+            if not genre_recommendations.empty:
+                sampled_recommendations = genre_recommendations.sample(min(count, len(genre_recommendations))).to_dict(orient="records")
+                recommendations.extend(sampled_recommendations)
+
         # Format response
         return jsonify({
-            "status": True,
-            "code": 200,
-            "message": "Top 3 Genres",
-            "data": {"predictions": top_predictions},
+            "predicted_genres": top_predictions,
+            "recommendations": recommendations
         })
 
     except Exception as e:
