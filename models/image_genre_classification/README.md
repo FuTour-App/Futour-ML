@@ -12,7 +12,7 @@ pip install -r requirements.txt
 ```
 - If you encounter any error, try to install:
 ```
-pip install tensorflow pillow flask gunicorn
+pip install tensorflow pillow flask gunicorn pandas
 ```
 - Run the Flask web server:
 ```
